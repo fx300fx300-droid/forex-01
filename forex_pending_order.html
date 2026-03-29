@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f8f9fa;color:#1a1a1a;font-size:14px;padding:12px}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:14px;margin-bottom:10px}
+.sec{font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{padding:6px 13px;font-size:12px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#555;cursor:pointer}
+.tab.active{background:#1a56db;color:#fff;border-color:#1a56db;font-weight:500}
+.panel{display:none}.panel.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:7px 8px;font-size:11px;font-weight:600;color:#666;border-bottom:1px solid #eee;background:#f8f9fa}
+tbody td{padding:7px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;line-height:1.5}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f5f8ff}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600}
+.tg{background:#dcfce7;color:#166534}
+.ty{background:#fef9c3;color:#854d0e}
+.tr{background:#fee2e2;color:#991b1b}
+.tb{background:#dbeafe;color:#1e40af}
+.ok{border-left:3px solid #16a34a;background:#f0fdf4;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#166534;margin-top:8px;line-height:1.5}
+.warn{border-left:3px solid #d97706;background:#fffbeb;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#92400e;margin-top:8px;line-height:1.5}
+.info{border-left:3px solid #2563eb;background:#eff6ff;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#1e40af;margin-top:8px;line-height:1.5}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.metric{background:#f0f4ff;border-radius:8px;padding:10px 12px}
+.ml{font-size:10px;color:#666;margin-bottom:3px}
+.mv{font-size:18px;font-weight:600;color:#1a1a1a}
+.ms{font-size:11px;color:#888;margin-top:2px}
+.ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.cl{font-size:12px;color:#666;min-width:82px;flex-shrink:0}
+.ctrl-row input[type=range]{flex:1;min-width:0}
+.cv{font-size:13px;font-weight:600;min-width:64px;text-align:right;flex-shrink:0;color:#1a1a1a}
+.step-box{background:#f5f8ff;border-radius:8px;padding:10px 12px;margin-bottom:7px;display:flex;gap:10px;align-items:flex-start}
+.sn{width:22px;height:22px;border-radius:50%;background:#1a56db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.sb{flex:1;font-size:12px;color:#1a1a1a;line-height:1.6}
+.hl-green{background:#f0fdf4}
+.hl-red{background:#fff0f0;opacity:.8}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('calc',this)">📐 手數計算器</button>
+  <button class="tab" onclick="showTab('types',this)">掛單類型選擇</button>
+  <button class="tab" onclick="showTab('entry',this)">判斷進場位置</button>
+  <button class="tab" onclick="showTab('sop',this)">MT4/5 下單 SOP</button>
+</div>
+
+<!-- TAB 1 -->
+<div id="tab-calc" class="panel active">
+  <div class="card">
+    <div class="sec">掛單參數計算（RR ≥ 2）</div>
+    <div class="ctrl-row"><span class="cl">資金 (USD)</span><input type="range" min="5000" max="20000" step="1000" value="10000" id="cap" oninput="calc()"><span class="cv" id="cap-v">$10,000</span></div>
+    <div class="ctrl-row"><span class="cl">單筆風險 %</span><input type="range" min="0.5" max="2" step="0.5" value="1" id="rsk" oninput="calc()"><span class="cv" id="rsk-v">1.0%</span></div>
+    <div class="ctrl-row"><span class="cl">槓桿倍數</span><input type="range" min="20" max="30" step="1" value="25" id="lev" oninput="calc()"><span class="cv" id="lev-v">1:25</span></div>
+    <div class="ctrl-row"><span class="cl">停損距離</span><input type="range" min="10" max="40" step="5" value="20" id="sl" oninput="calc()"><span class="cv" id="sl-v">20 pips</span></div>
+    <div class="ctrl-row"><span class="cl">RR 目標</span><input type="range" min="2" max="3.5" step="0.5" value="2" id="rr" oninput="calc()"><span class="cv" id="rr-v">2.0</span></div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric"><div class="ml">每筆風險金額</div><div class="mv" id="m-risk">$100</div><div class="ms">資金 1%</div></div>
+    <div class="metric"><div class="ml">建議手數</div><div class="mv" id="m-lots">0.50</div><div class="ms" id="m-ls">5 迷你手</div></div>
+    <div class="metric"><div class="ml">止損目標</div><div class="mv" id="m-sl">-20 pips</div><div class="ms" id="m-sls">虧損 $100</div></div>
+    <div class="metric"><div class="ml">止盈目標</div><div class="mv" id="m-tp">+40 pips</div><div class="ms" id="m-tps">獲利 $200</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec">三要素完整確認（掛單前必填）</div>
+    <table>
+      <thead><tr><th>要素</th><th>公式/依據</th><th>範例數值</th><th>注意</th></tr></thead>
+      <tbody id="order-table"></tbody>
+    </table>
+    <div class="ok" id="order-ok"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec">停損距離敏感度表（EURUSD，$10,000，1:25，RR 2.0）</div>
+    <table>
+      <thead><tr><th>停損</th><th>手數</th><th>止盈目標</th><th>保證金</th><th>佔資金</th><th>適合時框</th><th>評估</th></tr></thead>
+      <tbody id="sens-body"></tbody>
+    </table>
+    <div class="warn">RR>2 下，停損 20 pips → 需目標 40 pips，停損 25 pips → 需目標 50 pips。EURUSD 日均 ATR 約 70 pips，目標 40–50 pips 完全在合理範圍內。</div>
+  </div>
+</div>
+
+<!-- TAB 2 -->
+<div id="tab-types" class="panel">
+  <div class="card">
+    <div class="sec">四種掛單類型 — 使用場景比較</div>
+    <table>
+      <thead><tr><th>掛單類型</th><th>觸發邏輯</th><th>最佳使用場景</th><th>EURUSD 範例</th><th>RR>2 適合度</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Buy Limit</strong><br><span style="color:#666;font-size:11px">限價買單</span></td>
+          <td>價格下跌至設定價後做多</td>
+          <td>趨勢向上時等待回測支撐再買進（順大趨勢，逆小波動）</td>
+          <td>現價 1.0880，支撐 1.0840<br>掛 Buy Limit @ 1.0843</td>
+          <td><span class="tag tg">★★★ 最推薦</span><br><span style="font-size:11px">停損緊貼支撐，RR 天然 2+</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sell Limit</strong><br><span style="color:#666;font-size:11px">限價賣單</span></td>
+          <td>價格上漲至設定價後做空</td>
+          <td>趨勢向下時等待反彈至阻力再做空（順大趨勢，逆小波動）</td>
+          <td>現價 1.0840，阻力 1.0880<br>掛 Sell Limit @ 1.0877</td>
+          <td><span class="tag tg">★★★ 最推薦</span></td>
+        </tr>
+        <tr>
+          <td><strong>Buy Stop</strong><br><span style="color:#666;font-size:11px">停損買單</span></td>
+          <td>價格上漲突破設定價後做多</td>
+          <td>突破阻力後順勢做多（亞洲範圍突破策略）</td>
+          <td>阻力 1.0890，掛 Buy Stop @ 1.0893（+3 pips 緩衝）</td>
+          <td><span class="tag tb">★★ 可用</span><br><span style="font-size:11px">需確保突破後有足夠空間</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sell Stop</strong><br><span style="color:#666;font-size:11px">停損賣單</span></td>
+          <td>價格下跌突破設定價後做空</td>
+          <td>跌破支撐後順勢做空</td>
+          <td>支撐 1.0820，掛 Sell Stop @ 1.0817</td>
+          <td><span class="tag tb">★★ 可用</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="info">RR>2 首選 <strong>Buy Limit / Sell Limit</strong>：在支撐/阻力位掛限價單，停損緊貼結構（15–25 pips），目標設至下一重要位置（30–60 pips），RR 2.0–4.0 完全可達。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec">掛單 vs 市價單 — RR 影響對比</div>
+    <table>
+      <thead><tr><th>比較項目</th><th>市價單（盤中追入）</th><th>掛單（預設位置）</th></tr></thead>
+      <tbody>
+        <tr><td>入場品質</td><td>追入行情，通常已走一大段，停損遠</td><td>等待理想位置，停損緊貼結構</td></tr>
+        <tr><td>典型 RR</td><td>0.8–1.5（入場位置不佳）</td><td>1.8–4.0（在結構上等待）</td></tr>
+        <tr><td>需要盯盤</td><td>是（需要即時執行）</td><td>否（設好後可離開）</td></tr>
+        <tr><td>執行紀律</td><td>容易衝動、猶豫、改變計劃</td><td>強迫執行原本計劃，消除衝動</td></tr>
+        <tr><td>數據時風險</td><td>高（在高波動中市價成交，滑價大）</td><td>中（可在數據前取消掛單）</td></tr>
+      </tbody>
+    </table>
+    <div class="ok">結論：掛單是實現 RR>2 最自然的方式。在支撐等待買進，停損在支撐下方很近，目標在前高很遠，RR 由結構決定，不需要主觀調整。</div>
+  </div>
+</div>
+
+<!-- TAB 3 -->
+<div id="tab-entry" class="panel">
+  <div class="card">
+    <div class="sec">方法一：支撐 / 阻力回測掛單（最常用，RR 最高）</div>
+    <div class="step-box"><div class="sn">1</div><div class="sb"><strong>找支撐/阻力區（1小時圖）</strong>：選近 10–20 根 K 棒，找價格曾被「觸及 + 反彈」≥ 2 次的價格區間（寬度通常 5–15 pips）。越多次觸及越有效。</div></div>
+    <div class="step-box"><div class="sn">2</div><div class="sb"><strong>確認大趨勢方向</strong>：看 1小時 EMA20 斜率。EMA20 向上 → 只做多（掛 Buy Limit 在支撐）；EMA20 向下 → 只做空（掛 Sell Limit 在阻力）。違反趨勢方向的掛單勝率低，不要掛。</div></div>
+    <div class="step-box"><div class="sn">3</div><div class="sb"><strong>確定掛單價格</strong>：Buy Limit = 支撐區<strong>上方 2–3 pips</strong>（避免剛好落在支撐被滑過）；Sell Limit = 阻力區<strong>下方 2–3 pips</strong>。</div></div>
+    <div class="step-box"><div class="sn">4</div><div class="sb"><strong>設定停損（SL）</strong>：Buy Limit 停損 = 支撐區<strong>下方 5–8 pips</strong>（跌破支撐 = 結構失效，離場）。Sell Limit 停損 = 阻力區<strong>上方 5–8 pips</strong>。停損距離通常 15–25 pips。</div></div>
+    <div class="step-box"><div class="sn">5</div><div class="sb"><strong>設定止盈（TP）</strong>：目標放在<strong>下一個明確阻力/支撐位</strong>（通常是前高或前低）。計算 RR = (TP 距離) ÷ (SL 距離) ≥ 2.0 才掛單，否則放棄此機會。</div></div>
+    <div class="ok">具體範例：支撐區 1.0838–1.0842，掛 Buy Limit @ 1.0845，SL @ 1.0820（-25 pips），目標前高 1.0895（+50 pips）→ RR = 50/25 = 2.0 ✓</div>
+  </div>
+
+  <div class="card">
+    <div class="sec">方法二：EMA20 回測掛單（趨勢強勁時）</div>
+    <table>
+      <thead><tr><th>步驟</th><th>操作</th><th>具體說明</th></tr></thead>
+      <tbody>
+        <tr><td>①確認強趨勢</td><td>1小時圖 EMA20 持續傾斜，連續 5+ 根 K 在 EMA20 同側</td><td>弱趨勢或橫盤不用此方法</td></tr>
+        <tr><td>②等待回調</td><td>價格從高點回落靠近 EMA20</td><td>回調 30–60% 之前波段最佳</td></tr>
+        <tr><td>③掛 Buy Limit</td><td>EMA20 當前值 + 2–3 pips</td><td>每根 K 棒 EMA 值不同，需每日重算</td></tr>
+        <tr><td>④停損</td><td>EMA20 下方 12–18 pips</td><td>若收破 EMA20 代表趨勢轉弱，停損出場</td></tr>
+        <tr><td>⑤止盈</td><td>驗證 RR ≥ 2.0（前高距離 ÷ 停損距離）</td><td>EMA 策略停損 15 pips → 需目標 30 pips</td></tr>
+        <tr><td>⑥有效期</td><td>掛單設 4–8 小時有效</td><td>EMA 值移動後原掛單位置意義消失</td></tr>
+      </tbody>
+    </table>
+    <div class="ok">範例：EMA20 = 1.0848，掛 Buy Limit @ 1.0851，SL @ 1.0833（-18 pips），前高 1.0921（+70 pips）→ RR = 70/18 = 3.9 ✓✓</div>
+  </div>
+
+  <div class="card">
+    <div class="sec">方法三：亞洲範圍突破掛單（倫敦開盤策略）</div>
+    <div class="step-box"><div class="sn">1</div><div class="sb"><strong>記錄亞洲時段範圍</strong>：每日 00:00–07:00 GMT，標記最高點（H）和最低點（L）。EURUSD 亞洲範圍通常 20–40 pips。</div></div>
+    <div class="step-box"><div class="sn">2</div><div class="sb"><strong>建立雙向掛單</strong>：Buy Stop @ H + 3 pips（突破上沿）；Sell Stop @ L - 3 pips（跌破下沿）。兩個同時掛，等待擇一觸發。</div></div>
+    <div class="step-box"><div class="sn">3</div><div class="sb"><strong>停損設定</strong>：Buy Stop 的 SL = L - 5 pips（若突破後又跌回範圍，停損）；Sell Stop 的 SL = H + 5 pips。停損距離 = 亞洲範圍 + 8–10 pips。</div></div>
+    <div class="step-box"><div class="sn">4</div><div class="sb"><strong>止盈確認 RR ≥ 2.0</strong>：目標 = 亞洲範圍幅度 × 2。若範圍 30 pips → 目標 60 pips。停損 = 範圍 + 8 = 38 pips → RR = 60/38 = 1.58（不足）。需要目標 = 38×2 = 76 pips 才達 RR 2.0。</div></div>
+    <div class="step-box"><div class="sn">5</div><div class="sb"><strong>一方觸發後立即取消另一方</strong>：Buy Stop 被觸發 → 立刻取消 Sell Stop，反之亦然。否則兩筆都觸發會互相損失。</div></div>
+    <div class="step-box"><div class="sn">6</div><div class="sb"><strong>有效期只到中午</strong>：設 Expiry = 12:00 GMT。超過倫敦時段的突破可信度低，未觸發自動取消。</div></div>
+    <div class="warn">注意：亞洲範圍策略的 RR 在範圍較小時（< 20 pips）更難達到 2.0，因為停損相對目標佔比過大。範圍 ≥ 25 pips 的日子更理想。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec">掛單前核查清單（每次必過）</div>
+    <table>
+      <thead><tr><th>核查項目</th><th>要求</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tg">必要</span> 趨勢方向</td><td>1小時 EMA20 方向與掛單方向一致</td><td>逆趨勢掛單勝率大幅下降</td></tr>
+        <tr><td><span class="tag tg">必要</span> 支撐/阻力有效性</td><td>同一區域有 ≥ 2 次觸及反應</td><td>只有 1 次觸及的是「弱支撐」，不可靠</td></tr>
+        <tr><td><span class="tag tg">必要</span> RR ≥ 2.0 確認</td><td>(目標 pips) ÷ (停損 pips) ≥ 2.0</td><td>不足 2.0 就放棄，等下一個機會</td></tr>
+        <tr><td><span class="tag ty">強烈建議</span> 數據日曆</td><td>掛單有效期內無 Forex Factory 紅色事件</td><td>數據前 30 分鐘取消所有掛單</td></tr>
+        <tr><td><span class="tag ty">強烈建議</span> 有效期設定</td><td>設 GTC 或指定時間，不讓掛單永久有效</td><td>市場結構改變後舊掛單失去意義</td></tr>
+        <tr><td><span class="tag tb">建議</span> 每日最多掛單數</td><td>同時最多 2 筆未觸發掛單</td><td>保持可管理，避免多單觸發同方向爆倉</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TAB 4 -->
+<div id="tab-sop" class="panel">
+  <div class="card">
+    <div class="sec">MT4/MT5 下單步驟（Buy Limit 為例，Sell Limit 同理）</div>
+    <div class="step-box"><div class="sn">1</div><div class="sb"><strong>分析（下單前 5 分鐘）</strong>：確認趨勢 + 標記支撐 + 計算 RR。寫下：掛單價、SL 價格、TP 價格、手數。RR < 2.0 → 停止，不下單。</div></div>
+    <div class="step-box"><div class="sn">2</div><div class="sb"><strong>開下單視窗</strong>：MT4 → 右鍵圖表 → New Order（或按 F9）→ 展開 Type 下拉選單 → 選 Pending Order → 類型選 Buy Limit。</div></div>
+    <div class="step-box"><div class="sn">3</div><div class="sb"><strong>填寫五個欄位</strong>：<br>
+    • Volume（手數）= 計算所得（例 0.50）<br>
+    • Price（掛單價）= 支撐 + 3 pips（例 1.08430）<br>
+    • Stop Loss = 掛單價 - 停損距離（例 1.08180）<br>
+    • Take Profit = 掛單價 + 目標距離（例 1.08930）<br>
+    • Expiry = 勾選並填入當日 21:00 GMT</div></div>
+    <div class="step-box"><div class="sn">4</div><div class="sb"><strong>複查三次後送出</strong>：① 方向是否是 Buy Limit（不是 Sell）→ ② SL/TP 數值是否正確（SL 在入場下方，TP 在入場上方）→ ③ 手數是否正確 → 確認 → Place。</div></div>
+    <div class="step-box"><div class="sn">5</div><div class="sb"><strong>確認掛單出現在 Terminal</strong>：MT4 下方 Terminal 視窗 → Orders 標籤 → 看到掛單行含有 SL 和 TP 欄位數值 → 確認正確。</div></div>
+    <div class="step-box"><div class="sn">6</div><div class="sb"><strong>觸發後確認</strong>：訂單觸發後自動移至 Trade 標籤 → 確認 SL 和 TP 已正確附加在持倉上（部分券商需在觸發後手動確認）。</div></div>
+    <div class="step-box"><div class="sn">7</div><div class="sb"><strong>每日結束前</strong>：掃描 Orders 標籤 → 取消所有超過有效期或市場結構已改變的未觸發掛單。</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec">完整下單範例（EURUSD Buy Limit，SL 25 pips，RR 2.0）</div>
+    <table>
+      <thead><tr><th>MT4 欄位</th><th>填寫值</th><th>計算說明</th></tr></thead>
+      <tbody>
+        <tr><td>Symbol</td><td>EURUSD</td><td>確認非其他貨幣對</td></tr>
+        <tr><td>Type</td><td>Buy Limit</td><td>等待價格下來後買進</td></tr>
+        <tr><td>Price（掛單價）</td><td>1.08430</td><td>支撐 1.0840 上方 3 pips</td></tr>
+        <tr><td>Volume（手數）</td><td>0.40</td><td>$100 ÷ (25 × $10) = 0.40</td></tr>
+        <tr><td>Stop Loss</td><td>1.08180</td><td>1.08430 - 0.00250（25 pips）</td></tr>
+        <tr><td>Take Profit</td><td>1.08930</td><td>1.08430 + 0.00500（50 pips，RR=2.0）</td></tr>
+        <tr><td>Comment</td><td>BL-S1-20241120</td><td>方便日後回顧與統計</td></tr>
+        <tr><td>Expiry</td><td>2024.11.20 21:00</td><td>當日結束前未觸發則自動取消</td></tr>
+      </tbody>
+    </table>
+    <div class="ok">觸發後全自動：價格下跌至 1.08430 → 自動做多 0.40 手 → 自動附加 SL@1.08180 + TP@1.08930 → 無需人工介入。虧損上限 $100，目標獲利 $200，RR = 2.0</div>
+    <div class="warn" style="margin-top:8px">⚠ 常見錯誤：SL 填寫的是「距離 pips」而不是「絕對價格」→ 要填 1.08180，不是填 25。TP 同理，填絕對價格 1.08930，不是 50。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec">常見錯誤排查</div>
+    <table>
+      <thead><tr><th>錯誤現象</th><th>原因</th><th>解決方式</th></tr></thead>
+      <tbody>
+        <tr><td>掛單立刻成交（變市價）</td><td>Buy Limit 掛在現價<strong>之上</strong>（應掛在現價之下）</td><td>Buy Limit < 現價；Sell Limit > 現價</td></tr>
+        <tr><td>SL/TP 無法設定，系統報錯</td><td>距離掛單價太近，未達券商最小停損距離（通常 10 pips）</td><td>擴大 SL/TP 距離，或聯絡客服查詢最小距離</td></tr>
+        <tr><td>觸發後 SL 不見</td><td>少數券商的掛單 SL 不自動轉移至持倉</td><td>觸發後立即手動設 SL，或改用 MT5 的 OCO 訂單</td></tr>
+        <tr><td>夜間跳空觸發掛單</td><td>未設 Expiry，週末/隔夜跳空意外成交</td><td>永遠設 Expiry，週五收盤前取消所有掛單</td></tr>
+        <tr><td>兩個掛單都觸發（亞洲範圍）</td><td>忘記在一方觸發後取消另一方</td><td>觸發提醒 → 立即取消反向掛單（或設提醒/鬧鐘）</td></tr>
+        <tr><td>掛單被滑價大幅偏移</td><td>高影響數據發布時觸發（Forex Factory 紅色）</td><td>重大數據前 30 分鐘取消掛單，數據後重新評估</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function showTab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function calc(){
+  const cap=+document.getElementById('cap').value;
+  const rsk=+document.getElementById('rsk').value/100;
+  const lev=+document.getElementById('lev').value;
+  const sl=+document.getElementById('sl').value;
+  const rr=+document.getElementById('rr').value;
+  const riskAmt=cap*rsk;
+  const lots=Math.floor(riskAmt/(sl*10)*100)/100;
+  const tp=Math.ceil(sl*rr);
+  const marginPerStd=100000*1.085/lev;
+  const margin=lots*marginPerStd;
+
+  document.getElementById('cap-v').textContent='$'+cap.toLocaleString();
+  document.getElementById('rsk-v').textContent=(rsk*100).toFixed(1)+'%';
+  document.getElementById('lev-v').textContent='1:'+lev;
+  document.getElementById('sl-v').textContent=sl+' pips';
+  document.getElementById('rr-v').textContent=rr.toFixed(1);
+  document.getElementById('m-risk').textContent='$'+Math.round(riskAmt);
+  document.getElementById('m-lots').textContent=lots.toFixed(2);
+  document.getElementById('m-ls').textContent=(lots*10).toFixed(1)+' 迷你手';
+  document.getElementById('m-sl').textContent='-'+sl+' pips';
+  document.getElementById('m-sls').textContent='虧損 $'+Math.round(lots*sl*10);
+  document.getElementById('m-tp').textContent='+'+tp+' pips';
+  document.getElementById('m-tps').textContent='獲利 $'+Math.round(lots*tp*10);
+
+  document.getElementById('order-table').innerHTML=`
+    <tr><td><strong>① 掛單價</strong></td><td>技術分析：支撐/阻力位 ± 3 pips 緩衝</td><td>由圖表決定</td><td>不能主觀猜測，必須有結構依據</td></tr>
+    <tr><td><strong>② SL 停損</strong></td><td>掛單價 ∓ ${sl} pips（結構外 5–8 pips）</td><td>-${sl} pips</td><td>設在結構失效點，不是「感覺上的安全位置」</td></tr>
+    <tr><td><strong>③ TP 止盈</strong></td><td>掛單價 ± ${tp} pips（RR ${rr.toFixed(1)} 倍）</td><td>+${tp} pips → 獲利 $${Math.round(lots*tp*10)}</td><td>設在下一個明確阻力/支撐位</td></tr>
+    <tr><td><strong>④ 手數</strong></td><td>$${Math.round(riskAmt)} ÷ (${sl} × $10) = ${lots.toFixed(2)}</td><td>${lots.toFixed(2)} 手</td><td>保證金佔用 $${Math.round(margin)}（${(margin/cap*100).toFixed(1)}%）</td></tr>`;
+
+  document.getElementById('order-ok').textContent=
+    `✅ 本筆掛單：${lots.toFixed(2)} 手，停損 ${sl} pips（虧損 $${Math.round(lots*sl*10)}），止盈 ${tp} pips（獲利 $${Math.round(lots*tp*10)}），保證金 $${Math.round(margin)}（佔 ${(margin/cap*100).toFixed(1)}%），RR = ${rr.toFixed(1)}`;
+
+  const slList=[{s:10,c:'hl-red'},{s:15,c:'hl-red'},{s:20,c:'hl-green'},{s:25,c:'hl-green'},{s:30,c:'hl-green'},{s:35,c:''},{s:40,c:''}];
+  const tfs={10:'1–5分K',15:'5–15分K',20:'15分–1小時K',25:'1小時K',30:'1小時K',35:'4小時K',40:'4小時K'};
+  document.getElementById('sens-body').innerHTML=slList.map(({s,c})=>{
+    const l=Math.floor(riskAmt/(s*10)*100)/100;
+    const t=Math.ceil(s*rr);
+    const m=l*marginPerStd;
+    const mp=m/cap*100;
+    const ok=mp<30?'<span class="tag tg">建議</span>':mp<40?'<span class="tag ty">可用</span>':'<span class="tag tr">過重</span>';
+    return `<tr class="${c}"><td>${s} pips</td><td>${l.toFixed(2)} 手</td><td>+${t} pips</td><td>$${Math.round(m)}</td><td>${mp.toFixed(1)}%</td><td style="color:#666">${tfs[s]||'–'}</td><td>${ok}</td></tr>`;
+  }).join('');
+}
+calc();
+</script>
+</body>
+</html>
